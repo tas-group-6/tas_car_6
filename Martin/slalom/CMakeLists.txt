@@ -12,9 +12,9 @@ include_directories(include/)
 # On the robot the CMake modules for player are in this path
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "/usr/local/share/cmake/Modules")
 
-INCLUDE(UsePlayerC++)
-INCLUDE_DIRECTORIES(${PLAYERCPP_INCLUDE_DIRS})
-LINK_DIRECTORIES(${PLAYERCPP_LIBRARY_DIRS})
+#INCLUDE(UsePlayerC++)
+#INCLUDE_DIRECTORIES(${PLAYERCPP_INCLUDE_DIRS})
+#LINK_DIRECTORIES(${PLAYERCPP_LIBRARY_DIRS})
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -129,7 +129,8 @@ add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${PLAYERCPP_LINK_LIBS} ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} ${PLAYERCPP_LINK_LIBS})
 
 #############
 ## Install ##

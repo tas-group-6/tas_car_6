@@ -10,6 +10,8 @@
 #define RAD_TO_DEG 180.0/PI // 360 / 2Pi
 #define DEG_TO_RAD PI/180.0 // 360 / 2Pi
 
+#define DEG_TO_SERVO_SIGNAL(p) { (p) * 500 / 30 + 1500 }
+
 #define SAFE_DELETE( p ) { if( (p) ) { delete (p); (p) = 0; } }
 
 
