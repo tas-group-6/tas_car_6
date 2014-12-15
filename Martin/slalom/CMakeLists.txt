@@ -108,9 +108,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(${catkin_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(slalom
@@ -130,7 +128,7 @@ add_executable(${PROJECT_NAME} ${SRC_FILES})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
-target_link_libraries(${PROJECT_NAME} ${PLAYERCPP_LINK_LIBS})
+#target_link_libraries(${PROJECT_NAME} ${PLAYERCPP_LINK_LIBS})
 
 #############
 ## Install ##
