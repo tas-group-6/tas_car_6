@@ -69,6 +69,8 @@ private:
     /// Call to invert the steering angle
     void toggle_steer()
     {
+        //Helper is the distance from the current value for the servo to the middle (hence zero) position
+
         if( m_autonomous_control.control_servo.y < 1500 )
         {
             int helper = m_autonomous_control.control_servo.y + 1500;

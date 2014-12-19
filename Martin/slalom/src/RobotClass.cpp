@@ -174,8 +174,8 @@ double RobotClass::getRotationYaw()
     m_pose.rotation += ( m_yaw_old -  m_position2dProxy->GetYaw());
     m_yaw_old = m_position2dProxy->GetYaw();
 
-    if( m_pose.rotation > 2.0 * PI ) m_pose.rotation -= 2.0*PI;
-    if( m_pose.rotation < 0.0 * PI ) m_pose.rotation += 2.0*PI;
+    if( m_pose.rotation > M_PI ) m_pose.rotation -= 2.0*PI;
+    if( m_pose.rotation < M_PI ) m_pose.rotation += 2.0*PI;
 #endif
 
     return m_pose.rotation;

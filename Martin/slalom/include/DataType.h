@@ -6,7 +6,7 @@
 //Std includes
 #include <vector>
 
-#define PI 3.14159265359
+//#define PI 3.14159265359
 #define RAD_TO_DEG 180.0/PI // 360 / 2Pi
 #define DEG_TO_RAD PI/180.0 // 360 / 2Pi
 
