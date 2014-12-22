@@ -7,8 +7,8 @@
 #include <vector>
 
 //#define PI 3.14159265359
-#define RAD_TO_DEG 180.0/PI // 360 / 2Pi
-#define DEG_TO_RAD PI/180.0 // 360 / 2Pi
+#define RAD_TO_DEG 180.0/M_PI // 360 / 2Pi
+#define DEG_TO_RAD M_PI/180.0 // 360 / 2Pi
 
 #define DEG_TO_SERVO_SIGNAL(p) { (p) * 500 / 30 + 1500 }
 

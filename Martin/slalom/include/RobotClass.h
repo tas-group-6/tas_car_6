@@ -54,6 +54,13 @@ public:
 
 private:
 
+
+    /// Callback for Velocity topic
+    void callback_velocity(const geometry_msgs::Twist::ConstPtr & msg);
+
+
+
+
     /// When the current goal is reached this functions sets the next goal
     bool nextGoal();
 
@@ -93,6 +100,8 @@ private:
     PoseType m_speed;
 
 
+    geometry_msgs::Twist m_twist;
+
     /// A goal position;
     geometry_msgs::Point m_goal;
     wiimote::State m_wii;
@@ -100,6 +109,8 @@ private:
 
     ros::NodeHandle m_nodeHandle;
     ros::Subscriber m_wii_sub;
+    ros::Subscriber m_sub_velocity;
+
 
     /// Stores the old value of Players GetYaw() to get the change in rotation -> independent of robot's / stage's definition of the zero
     double m_yaw_old;

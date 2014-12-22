@@ -23,6 +23,8 @@ RobotClass::RobotClass()
 
 //m_wii_sub = m_nodeHandle.subscribe< wiimote::State >("wii_communication",1000,&control::wiiCommunicationCallback,this);
 
+    m_sub_velocity = m_nodeHandle.subscribe<geometry_msgs::Twist>( "velocity", 1, &RobotClass::callback_velocity, this);
+
 
 #ifdef USE_PLAYER
 
@@ -62,8 +64,14 @@ void RobotClass::update()
 
 #endif
 
+    static int counter = 0;
+    std::printf("-----------------------------------\n");
+    std::printf("Update Call: %d", counter++);
 
-    std::printf("Odom: lin %.3f\t ang %.3f\n", m_autonomous_control.cmd_linearVelocity, m_autonomous_control.odom_angularVelocity);
+
+
+    //std::printf("Odom: lin %.3f\t ang %.3f\n", m_autonomous_control.cmd_linearVelocity, m_autonomous_control.odom_angularVelocity);
+    std::printf("Velocity: lin %.3f\t ang %.3f\n", m_twist.linear.x, m_twist.angular.z);
 
     // Integrate Pose with explizit euler step
     m_speed.rotation = m_autonomous_control.odom_angularVelocity;
@@ -91,10 +99,10 @@ void RobotClass::update()
     std::printf("Vel: %.3f %.3f %.3f\n", m_speed.position.x, m_speed.position.y, m_speed.rotation);
 
     double test = norm( m_goal, m_pose.position);
-    std::printf("Goal: %.f %.f \t Distance: %.3f", m_goal.x, m_goal.y, test);
+    std::printf("Goal: %.f %.f \t Distance: %.3f\n", m_goal.x, m_goal.y, test);
 
 
-    std::printf("Servo: %.3f\t%.3f", m_autonomous_control.control_servo.x, m_autonomous_control.control_servo.y);
+    std::printf("Servo: %.3f\t%.3f\n", m_autonomous_control.control_servo.x, m_autonomous_control.control_servo.y);
 
 
     m_autonomous_control.control_servo_pub_.publish( m_autonomous_control.control_servo );
@@ -189,3 +197,10 @@ const PlayerCc::RangerProxy *RobotClass::laserProxy() const { return m_laserProx
 const PlayerCc::Position2dProxy *RobotClass::position2dProxy() const { return m_position2dProxy; }
 
 #endif
+
+
+void RobotClass::callback_velocity(const geometry_msgs::Twist::ConstPtr &msg)
+{
+     m_twist.angular = msg->angular;
+     m_twist.linear = msg->linear;
+}

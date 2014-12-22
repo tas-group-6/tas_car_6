@@ -52,6 +52,11 @@ private:
     /* check the wii states and switch the flag for manual mode and autonomous mode */
     void wiiCommunicationCallback(const std_msgs::Int16MultiArray::ConstPtr& msg);
 
+
+
+
 };
+
+
 
 #endif // CONTROL_H
