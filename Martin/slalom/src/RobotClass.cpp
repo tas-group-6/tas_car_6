@@ -1,29 +1,29 @@
 #include "RobotClass.h"
 
 RobotClass::RobotClass()
-{
-    m_pose.position.x = 0.0;
-    m_pose.position.y = 0.0;
-    m_pose.rotation = 0.0;
-
-    m_speed.position.x = 0.0;
-    m_speed.position.y = 0.0;
-    m_speed.rotation = 0.0;
-
-
-    m_goal.x = 1.25;
-    m_goal.y = 0.55;
-
+{    
     //Linear Velocity
-    m_autonomous_control.control_servo.x = 1550;
+    //m_autonomous_control.control_servo.x = 1550;
 
     //Angular Velocity
-    double a = RAD_TO_DEG * atan( m_goal.x / m_goal.y * CAR_LENGTH );
-    m_autonomous_control.control_servo.y = DEG_TO_SERVO_SIGNAL( a );
+    //double a = RAD_TO_DEG * atan( m_goal.x / m_goal.y * CAR_LENGTH );
+    //m_autonomous_control.control_servo.y = DEG_TO_SERVO_SIGNAL( a );
 
-//m_wii_sub = m_nodeHandle.subscribe< wiimote::State >("wii_communication",1000,&control::wiiCommunicationCallback,this);
 
-    m_sub_velocity = m_nodeHandle.subscribe<geometry_msgs::Twist>( "velocity", 1, &RobotClass::callback_velocity, this);
+    bool result;
+
+    result = loadInstructionVector(m_initial_turn, "/home/martin/TAS_ws/tas_car_6/trunk/Martin/slalom/wiimote_log_file.txt");
+    if(!result) throw ErrorType("Could not load initial turn");
+
+
+    result =  loadInstructionVector(m_initial_turn, "/home/martin/TAS_ws/tas_car_6/trunk/Martin/slalom/wiimote_log_file.txt");
+    if(!result) throw ErrorType("Could not load left turn");
+
+
+    result =  loadInstructionVector(m_initial_turn, "/home/martin/TAS_ws/tas_car_6/trunk/Martin/slalom/wiimote_log_file.txt");
+    if(!result) throw ErrorType("Could not load right turn");
+
+
 
 
 #ifdef USE_PLAYER
@@ -34,18 +34,13 @@ RobotClass::RobotClass()
 
     m_playerClient->Read();
 
-    m_yaw_old = m_position2dProxy->GetYaw(); //Store first value of rotation
-
-#else
-
-    m_yaw_old = 0.0;
-
 #endif
 
 }
 
 RobotClass::~RobotClass()
 {
+
 #ifdef USE_PLAYER
     SAFE_DELETE(m_laserProxy);
     SAFE_DELETE(m_position2dProxy);
@@ -53,6 +48,28 @@ RobotClass::~RobotClass()
 #endif
 
 }
+
+
+bool RobotClass::loadInstructionVector(std::vector<ServoInstructionType>& inst_vector, std::string filename)
+{
+
+    std::ifstream ifs;
+    ifs.open(filename);
+    if(!ifs.is_open()) return false;
+
+    ServoInstructionType instruction;
+
+    while (!ifs.eof())
+    {
+        ifs >> instruction.t >> instruction.velocity >> instruction.steer;
+        inst_vector.push_back( instruction );
+    }
+
+    return true;
+}
+
+
+
 
 
 
@@ -68,69 +85,18 @@ void RobotClass::update()
     std::printf("-----------------------------------\n");
     std::printf("Update Call: %d", counter++);
 
-
-
-    //std::printf("Odom: lin %.3f\t ang %.3f\n", m_autonomous_control.cmd_linearVelocity, m_autonomous_control.odom_angularVelocity);
-    std::printf("Velocity: lin %.3f\t ang %.3f\n", m_twist.linear.x, m_twist.angular.z);
-
-    // Integrate Pose with explizit euler step
-    m_speed.rotation = m_autonomous_control.odom_angularVelocity;
-    m_pose.rotation += m_speed.rotation * update_rate;
-
-
-    //Create current viewdirection from rotation
-    double view_x = cos( m_pose.rotation );
-    double view_y = sin( m_pose.rotation );
-
-    m_speed.position.x = view_x * m_autonomous_control.odom_linearVelocity;
-    m_speed.position.y = view_y * m_autonomous_control.odom_linearVelocity;
-
-    m_pose.position.x +=  m_speed.position.x * update_rate;
-    m_pose.position.y +=  m_speed.position.y * update_rate;
-
-
-
-    //Get next goal when required, and ajust motor signals
-    bool result = nextGoal();
-
-
-
-    std::printf("Pos: %.3f %.3f %.3f\n", m_pose.position.x, m_pose.position.y, m_pose.rotation);
-    std::printf("Vel: %.3f %.3f %.3f\n", m_speed.position.x, m_speed.position.y, m_speed.rotation);
-
-    double test = norm( m_goal, m_pose.position);
-    std::printf("Goal: %.f %.f \t Distance: %.3f\n", m_goal.x, m_goal.y, test);
-
-
-    std::printf("Servo: %.3f\t%.3f\n", m_autonomous_control.control_servo.x, m_autonomous_control.control_servo.y);
-
-
-    m_autonomous_control.control_servo_pub_.publish( m_autonomous_control.control_servo );
-
-}
-
-
-bool RobotClass::nextGoal()
-{
-    static bool first_goal_reached = false;
-
-    if (norm( m_goal, m_pose.position) < m_goal_distance)
+    for (int i = 0; i < m_initial_turn.size() -1; ++i)
     {
-        m_goal.x += 1.5; //Move goal to next cone
-        m_goal.y *= -1.0; //Put it on the other side
+        m_autonomous_control.control_servo.x = m_initial_turn[i].velocity;
+        m_autonomous_control.control_servo.y = m_initial_turn[i].steer;
 
-        if (!first_goal_reached)
-        {
-            m_autonomous_control.control_servo.y = 1750;
-            first_goal_reached = true;
-        }
+        std::chrono::microseconds d(  m_initial_turn[i+1].t - m_initial_turn[i].t );
 
-        toggle_steer();
+        std::printf("Servo: %.3f\t%.3f\n", m_autonomous_control.control_servo.x, m_autonomous_control.control_servo.y);
+        m_autonomous_control.control_servo_pub_.publish( m_autonomous_control.control_servo );
 
-
-        return true;
+        std::this_thread::sleep_for( d );
     }
-    return false;
 }
 
 bool RobotClass::FillScanMessage(sensor_msgs::LaserScan& scan) const
@@ -167,29 +133,6 @@ bool RobotClass::FillScanMessage(sensor_msgs::LaserScan& scan) const
 #endif
 }
 
-PoseType RobotClass::Pose() const { return m_pose;}
-void RobotClass::Pose(const PoseType& p){ m_pose = p;}
-
-PoseType RobotClass::Speed() const { return m_speed;}
-void RobotClass::Speed(const PoseType& p){ m_speed = p;}
-
-double RobotClass::getRotation() const {  return m_pose.rotation; }
-void RobotClass::setRotation(double value) {  m_pose.rotation = value; }
-
-double RobotClass::getRotationYaw()
-{
-#ifdef USE_PLAYER
-    m_pose.rotation += ( m_yaw_old -  m_position2dProxy->GetYaw());
-    m_yaw_old = m_position2dProxy->GetYaw();
-
-    if( m_pose.rotation > M_PI ) m_pose.rotation -= 2.0*PI;
-    if( m_pose.rotation < M_PI ) m_pose.rotation += 2.0*PI;
-#endif
-
-    return m_pose.rotation;
-}
-void RobotClass::setRotationYaw(double value) {  m_pose.rotation = value; }
-
 #ifdef USE_PLAYER
 
 const PlayerCc::PlayerClient *RobotClass::playerClient() const {  return m_playerClient; }
@@ -197,10 +140,3 @@ const PlayerCc::RangerProxy *RobotClass::laserProxy() const { return m_laserProx
 const PlayerCc::Position2dProxy *RobotClass::position2dProxy() const { return m_position2dProxy; }
 
 #endif
-
-
-void RobotClass::callback_velocity(const geometry_msgs::Twist::ConstPtr &msg)
-{
-     m_twist.angular = msg->angular;
-     m_twist.linear = msg->linear;
-}

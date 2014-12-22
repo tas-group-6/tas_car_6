@@ -4,6 +4,7 @@
 ///Enables the use of player to simulate laser scans
 //#define USE_PLAYER
 
+#include <geometry_msgs/Point.h>
 #include <sensor_msgs/LaserScan.h>
 #include <wiimote/State.h>
 
@@ -13,13 +14,17 @@
 #endif
 
 #include <string.h>
+#include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
+#include <thread>
+#include <chrono>
 
 
-//#include "DataType.h"
 
 #include "control.h"
+#include "DataType.h"
 
 
 
@@ -33,82 +38,17 @@ public:
 
     bool FillScanMessage(sensor_msgs::LaserScan& scan) const;
 
-//    PoseType Pose() const;
-//    void Pose(const PoseType& p);
-
-//    PoseType Speed() const;
-//    void Speed(const PoseType& p);
-
-//    double getRotation() const;
-//    void setRotation(double value);
-
-//    double getRotationYaw();
-//    void setRotationYaw(double value);
-
 private:
-
-
-    /// Callback for Velocity topic
-    void callback_velocity(const geometry_msgs::Twist::ConstPtr & msg);
-
-    /// When the current goal is reached this functions sets the next goal
-//    bool nextGoal();
-
-
-    /// Math helper
-    double norm( const geometry_msgs::Point& p1, const geometry_msgs::Point& p2) const
-    {
-        double a = p1.x - p2.x; double b = p1.y - p2.y;
-        return sqrt(a*a + b*b );
-    }
-
-
-    /// Call to invert the steering angle
-    void toggle_steer()
-    {
-        //Helper is the distance from the current value for the servo to the middle (hence zero) position
-
-        if( m_autonomous_control.control_servo.y < 1500 )
-        {
-            int helper = m_autonomous_control.control_servo.y + 1500;
-            m_autonomous_control.control_servo.y += helper * 2;
-        }
-        else if ( m_autonomous_control.control_servo.y > 1500 )
-        {
-            int helper = m_autonomous_control.control_servo.y - 1500;
-            m_autonomous_control.control_servo.y -= helper * 2;
-        }
-    }
+    bool loadInstructionVector( std::vector<ServoInstructionType>& inst_vector, std::string filename);
 
 
 private:
+    // Wrapper for motor comands
+    control m_autonomous_control;
 
-    /// Uses the posetype to represent position and orientation
-    PoseType m_pose;
-
-    /// Uses the posetype to represent linear and angular velocity
-    PoseType m_speed;
-
-
-    geometry_msgs::Twist m_twist;
-
-    /// A goal position;
-    geometry_msgs::Point m_goal;
-    wiimote::State m_wii;
-
-
-    ros::NodeHandle m_nodeHandle;
-    ros::Subscriber m_wii_sub;
-    ros::Subscriber m_sub_velocity;
-
-
-    /// Stores the old value of Players GetYaw() to get the change in rotation -> independent of robot's / stage's definition of the zero
-    double m_yaw_old;
-
-
-    const double m_goal_distance = 0.1;   ///< Maximum distandce of goal to fulfill it
-
-    control m_autonomous_control;    ///< Wrapper for motor comands
+    std::vector<ServoInstructionType> m_initial_turn;
+    std::vector<ServoInstructionType> m_turn_left;
+    std::vector<ServoInstructionType> m_turn_right;
 
 #ifdef USE_PLAYER
 public:

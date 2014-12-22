@@ -7,7 +7,7 @@ wii_lib::wii_lib()
 
     //    wii_communication_pub = nh_.advertise<std_msgs::Int16MultiArray>("wii_communication",1);
 
-    wii_sub_ = nh_.subscribe<wiimote::State>("wiimote/state",100,&wii_lib::wiiStateCallback,this);
+    wii_sub_ = nh_.subscribe<wiimote::State>("wiimote/state",1,&wii_lib::wiiStateCallback,this);
 
     msg_Initialization(wii_state_);
 
@@ -93,7 +93,7 @@ void wii_lib::wiiStateCallback(const wiimote::State::ConstPtr& wiiState)
 
                 std::chrono::steady_clock::time_point time_cur = std::chrono::steady_clock::now();
 
-                double t =  std::chrono::duration_cast<std::chrono::milliseconds>(time_cur - m_time_start).count();
+                auto t = std::chrono::duration_cast<std::chrono::microseconds>(time_cur - m_time_start).count();
 
                 m_ofs << t << "\t" << servo.x << "\t" << servo.y << std::endl;
                 std::cout << t << "\t" << servo.x << "\t" << servo.y << std::endl;
