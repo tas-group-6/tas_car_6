@@ -14,6 +14,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <ctime>
+#include <chrono>
 
 #define WII_BUTTON_1            0
 #define WII_BUTTON_2            1
@@ -43,8 +45,8 @@ public:
     ~wii_lib();
 
     ros::NodeHandle nh_;
-    ros::Publisher wii_servo_pub_;
-    ros::Publisher wii_communication_pub;
+//    ros::Publisher wii_servo_pub_;
+//    ros::Publisher wii_communication_pub;
     ros::Subscriber wii_sub_;
 
     /* flags for the control mode and brake */
@@ -69,6 +71,13 @@ private:
 
     std::ofstream m_ofs; // Output file stream for logging
     bool m_logging_enabled; //Variable to switch logging on and off
+
+
+    std::vector<int> m_wii_state_old;
+    std::vector<int> m_nunchuck_state_old;
+
+    std::chrono::steady_clock::time_point m_time_start;
+
 };
 
 #endif // WII_LIB_H

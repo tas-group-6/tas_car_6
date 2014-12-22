@@ -3,9 +3,9 @@
 wii_lib::wii_lib()
 {
     /*Initilaization of publishers, subscribers and messages*/
-    wii_servo_pub_ = nh_.advertise<geometry_msgs::Vector3>("servo", 1);
+    // wii_servo_pub_ = nh_.advertise<geometry_msgs::Vector3>("servo", 1);
 
-    wii_communication_pub = nh_.advertise<std_msgs::Int16MultiArray>("wii_communication",1);
+    //    wii_communication_pub = nh_.advertise<std_msgs::Int16MultiArray>("wii_communication",1);
 
     wii_sub_ = nh_.subscribe<wiimote::State>("wiimote/state",100,&wii_lib::wiiStateCallback,this);
 
@@ -23,6 +23,10 @@ wii_lib::wii_lib()
 
     m_ofs.open("wiimote_log_file.txt", std::ios::out);
     if(!m_ofs.is_open()) throw std::string("Output file stream not open");
+
+
+    m_wii_state_old.resize(11);
+    m_time_start = std::chrono::steady_clock::now();
 }
 
 wii_lib::~wii_lib()
@@ -32,7 +36,13 @@ wii_lib::~wii_lib()
 
 void wii_lib::wiiStateCallback(const wiimote::State::ConstPtr& wiiState)
 {   
-    if( wiiState.get()->buttons[WII_BUTTON_A] ) m_logging_enabled = !m_logging_enabled;
+    //Button A pressed and changed
+    if( wiiState.get()->buttons[ WII_BUTTON_A] &&
+            wiiState.get()->buttons[WII_BUTTON_A] != m_wii_state_old[WII_BUTTON_A])
+    {
+        std::cout << "- Button A -" << std::endl;
+        m_logging_enabled = !m_logging_enabled;
+    }
 
 
     /*check if C button is pressed*/
@@ -80,17 +90,25 @@ void wii_lib::wiiStateCallback(const wiimote::State::ConstPtr& wiiState)
 
             if(m_logging_enabled)
             {
-                unsigned int seconds = ros::Time::now().nsec;
-                m_ofs << seconds << "\t" << servo.x << "\t" << servo.y << std::endl;
-                std::cout << seconds << "\t" << servo.x << "\t" << servo.y << std::endl;
+
+                std::chrono::steady_clock::time_point time_cur = std::chrono::steady_clock::now();
+
+                double t =  std::chrono::duration_cast<std::chrono::milliseconds>(time_cur - m_time_start).count();
+
+                m_ofs << t << "\t" << servo.x << "\t" << servo.y << std::endl;
+                std::cout << t << "\t" << servo.x << "\t" << servo.y << std::endl;
             }
         }
 
-        wii_servo_pub_.publish(servo); /*publish servo messages to arduino*/
+        //wii_servo_pub_.publish(servo); /*publish servo messages to arduino*/
     }
 
     wii_state_.data[0] = controlMode.data;
     wii_state_.data[1] = emergencyBrake.data;
+
+
+    m_wii_state_old[WII_BUTTON_A] = wiiState.get()->buttons[WII_BUTTON_A]; //Save current state
+    //std::cout << m_wii_state_old[WII_BUTTON_A] << std::endl;
 }
 
 void wii_lib::msg_Initialization(std_msgs::Int16MultiArray &msg)
