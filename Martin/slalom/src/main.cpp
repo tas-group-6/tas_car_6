@@ -12,6 +12,10 @@
 #include "RobotClass.h"
 #include "control.h"
 
+// Update rate for integration and main loop. In Hz
+const double update_rate = 1.0;
+
+
 
 void chatterCallback(const std_msgs::String::ConstPtr& msg)
 {

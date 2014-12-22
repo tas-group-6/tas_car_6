@@ -17,40 +17,33 @@
 #include <iostream>
 
 
-#include "DataType.h"
+//#include "DataType.h"
+
 #include "control.h"
 
 
-/// Update rate for integration and main loop. In Hz
-const double update_rate = 1.0;
 
 class RobotClass
 {
 public:
-
-    /**
-   * This constructor sets up a PlayerClient which connects to localhost:<default-port>
-   */
     RobotClass();
     ~RobotClass();
 
-
-    /// Calls the player client and retrives new data from the sensors
     void update();
 
     bool FillScanMessage(sensor_msgs::LaserScan& scan) const;
 
-    PoseType Pose() const;
-    void Pose(const PoseType& p);
+//    PoseType Pose() const;
+//    void Pose(const PoseType& p);
 
-    PoseType Speed() const;
-    void Speed(const PoseType& p);
+//    PoseType Speed() const;
+//    void Speed(const PoseType& p);
 
-    double getRotation() const;
-    void setRotation(double value);
+//    double getRotation() const;
+//    void setRotation(double value);
 
-    double getRotationYaw();
-    void setRotationYaw(double value);
+//    double getRotationYaw();
+//    void setRotationYaw(double value);
 
 private:
 
@@ -58,11 +51,8 @@ private:
     /// Callback for Velocity topic
     void callback_velocity(const geometry_msgs::Twist::ConstPtr & msg);
 
-
-
-
     /// When the current goal is reached this functions sets the next goal
-    bool nextGoal();
+//    bool nextGoal();
 
 
     /// Math helper
