@@ -64,7 +64,7 @@ int main(int argc, char **argv)
           ROS_INFO("Automatic Control!");
 
           //Call the update function of the robot to get the new values for the servo
-          //When completed false is returned
+          //When completed result is false
           result = robot.update(instruction);
           if(!result) break;
 

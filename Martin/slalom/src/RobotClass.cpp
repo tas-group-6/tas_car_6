@@ -12,11 +12,10 @@ RobotClass::RobotClass() : m_index_initial(0), m_index_left(0), m_index_right(0)
 
   std::string filename;
   std::stringstream ss;
-  //   ss << "/home/martin/TAS_ws/tas_car_6/trunk/Martin/slalom/" << "wiimote_log_file.txt";
-  ss << "/home/martin/Programming/TAS/tas_car_6/trunk/Martin/slalom/" << "wiimote_log_file.txt";
+  ss << "/home/tas_group_06/catkin_ws/src/slalom/" << "wiimote_log_file.txt";
+   //ss << "/home/martin/TAS_ws/tas_car_6/trunk/Martin/slalom/" << "wiimote_log_file.txt";
+  //ss << "/home/martin/Programming/TAS/tas_car_6/trunk/Martin/slalom/" << "wiimote_log_file.txt";
   filename = ss.str();
-
-
 
   bool result;
 
