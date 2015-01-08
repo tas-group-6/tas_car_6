@@ -19,7 +19,7 @@ class control
 {
 public:
     control();
-    ~control(){}
+    ~control();
 
     ros::NodeHandle nh_;
     ros::Publisher control_servo_pub_;

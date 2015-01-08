@@ -9,14 +9,23 @@ control::control()
 
     wii_communication_sub = nh_.subscribe<std_msgs::Int16MultiArray>("wii_communication",1000,&control::wiiCommunicationCallback,this);
 
-//    Fp = 10;// need to test! defult:125
+    //    Fp = 10;// need to test! defult:125
 
-//    current_ServoMsg.x = 1500;
-//    current_ServoMsg.y = 1500;
+    //    current_ServoMsg.x = 1500;
+    //    current_ServoMsg.y = 1500;
 
-//    previous_ServoMsg.x = 1500;
-//    previous_ServoMsg.y = 1500;
+    //    previous_ServoMsg.x = 1500;
+    //    previous_ServoMsg.y = 1500;
 
+}
+control::~control()
+{
+    control_servo.x=1500;
+    control_servo.y=1500;
+
+    control_servo_pub_.publish(control_servo);
+
+    std::printf( "control destructed, resetting servo\n");
 }
 
 // We can subscribe to the odom here and get some feedback signals so later we can build our controllers

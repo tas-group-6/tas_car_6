@@ -17,14 +17,14 @@ struct ErrorType
 
   ErrorType( std::string s) : msg(s) {}
 
-  void what() { printf("%s\n", msg.c_str()); }
+  void what() { std::cout << msg << std::endl;}
 };
 
 
 /// This structure represents a full instruction for the ardiuno board
 struct  ServoInstructionType
 {
-    /// Time when this instruction was recorded. In milliseconds. 64-bits are rquired for the std::chrono functions
+    /// Time when this instruction was recorded. In microseconds. 64-bits are rquired for the std::chrono functions as time
     unsigned long long int t;
     int velocity;   ///< pwm value for velocity
     int steer;      ///< pwm value for steering angle
