@@ -1,6 +1,6 @@
 #include "wii_lib.h"
 
-wii_lib::wii_lib()
+wii_lib::wii_lib(const char* filename)
 {
     /*Initilaization of publishers, subscribers and messages*/
     // wii_servo_pub_ = nh_.advertise<geometry_msgs::Vector3>("servo", 1);
@@ -21,7 +21,7 @@ wii_lib::wii_lib()
 
     m_logging_enabled = false;
 
-    m_ofs.open("wiimote_log_file.txt", std::ios::out);
+    m_ofs.open(filename, std::ios::out); //"wiimote_log_file.txt"
     if(!m_ofs.is_open()) throw std::string("Output file stream not open");
 
 

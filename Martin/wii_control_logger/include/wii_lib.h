@@ -41,7 +41,7 @@
 class wii_lib
 {
 public:
-    wii_lib();
+    wii_lib(const char* filename);
     ~wii_lib();
 
     ros::NodeHandle nh_;
