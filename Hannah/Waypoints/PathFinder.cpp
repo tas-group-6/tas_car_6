@@ -40,8 +40,16 @@ void PathFinder::Search(NodeType* start, NodeType* goal, std::vector<NodeType*>*
 
 	aStarSearch(&path);
 
-	path_to_nodes(&path, nodes);
+	std::vector<NodeType*> tmp_nodes;
 
+	path_to_nodes(&path, &tmp_nodes);
+	
+	// Append here so that the order of the nodes is correct -> path from start to goal
+	//for (unsigned int i = 0; i < tmp_nodes->size(); i++)
+	for (int i = tmp_nodes.size()-1; i >= 0; i--)
+	{
+		nodes->push_back(tmp_nodes[i]);
+	}
 }
 
 bool PathFinder::goal_test(NodeType* n)
@@ -99,12 +107,13 @@ bool PathFinder::goal_test(NodeType* n)
 int PathFinder::heuristic(NodeType* n)
 {
 	//Manhatten heuristic
-	//return abs(n->x - m_goal->x) + abs(n->y - m_goal->y);
+	//return abs(n->i - m_goal->i) + abs(n->j - m_goal->j);
 
 	// Euclidean distance
-	int a = (int)round(sqrt((n->x - m_goal->x)*(n->x - m_goal->x) + (n->y - m_goal->y)*(n->y - m_goal->y)));
+	int a = (int)round(sqrt((n->i - m_goal->i)*(n->i - m_goal->i) + (n->j - m_goal->j)*(n->j - m_goal->j)));
 
-	int b = (int)round( 250.0 * (double)m_costmap.at<unsigned char>(n->x, n->y) / 255.0);
+	// Costmap value
+	int b = (int)round( 250.0 * (double)m_costmap.at<unsigned char>(n->i, n->j) / 255.0);
 
 	return a + b;
 }
@@ -118,7 +127,7 @@ int PathFinder::cost_of_action(NodeType* current, NodeType* successor)
 	if (current->walkable && successor->walkable)
 	{
 		// Manhatten distance of the two nodes
-		int tmp = abs(current->x - successor->x) + abs(current->y - successor->y);
+		int tmp = abs(current->i - successor->i) + abs(current->j - successor->j);
 
 		if (tmp == 1) return cost_per_single_move;
 		else return tmp * cost_per_single_move * 10; // Jumping is penelized by factor of ten
@@ -127,8 +136,6 @@ int PathFinder::cost_of_action(NodeType* current, NodeType* successor)
 
 	if (current->walkable && !successor->walkable)
 		return 1000; // Fee for moving into unwalkable parts of the map
-
-	//if (!current->walkable) return 1000;
 
 	return 0;
 }
@@ -214,7 +221,7 @@ void PathFinder::path_to_nodes(PathType* path, std::vector<NodeType*>* nodes)
 		
 		current = path->at(current);
 				
-		if (current->x == -1 && current->y == -1) break;
+		if (current->i == -1 && current->j == -1) break;
 
 	} while (true);
 

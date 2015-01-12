@@ -14,7 +14,7 @@
 // Definition of a node for the graph
 struct NodeType
 {
-	const int x, y;	// Position
+	const int i, j;	// Position
 	unsigned char pixel; // Grey value of pixel
 	bool visited;
 	bool walkable;
@@ -22,15 +22,15 @@ struct NodeType
 	std::vector<NodeType*> outgoing; // Nodes that can be reached from this node
 	std::vector<NodeType*> incoming; // Nodes that lead to this node	
 
-	NodeType(const int _x, const int _y) :
-		x(_x), y(_y),
+	NodeType(const int _i, const int _j) :
+		i(_i), j(_j),
 		pixel(0), visited(false), walkable(false),
 		cost_accumulator(0)
 	{}
 	~NodeType()
 	{
-		outgoing.clear();
-		incoming.clear();
+		//outgoing.clear();
+		//incoming.clear();
 	}
 };
 

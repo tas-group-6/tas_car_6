@@ -2,25 +2,44 @@
 #include <string>
 #include <vector>
 #include <time.h>
-
 #include <math.h>
+#include <fstream>
 
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
 #include "PathFinder.h"
 
+
+#define PIXEL_TO_METER 0.038238 /* Factor for conversion */
+#define CLOCKWISE true
+
 //using namespace std;
 //using namespace cv;
 
-const int sizeX = 1280;						// Horizontal size of the picture
-const int sizeY = 800;						// Vertical size of the picture
-const std::string WINDOW_NAME = "Waypoint Generator";		// The name of the window
+// The name of the window
+const std::string WINDOW_NAME = "Waypoint Generator";
 
 // The floor plan of the building
 const cv::Mat map_LSR = cv::imread("LSR_3.png");
 
-std::vector< std::vector< NodeType* >> graph; // The graph for searching a way 
+// The position of a node on the map. Either one of the four corridors or an edge
+enum NodePosition{ TOP, LEFT, BOTTOM, RIGHT, EDGE };
+
+// The graph for searching a way 
+std::vector< std::vector< NodeType* >> graph;
+
+
+void transform_node_to_world(const NodeType* n, double& x,double& y)
+{
+	x = n->j * PIXEL_TO_METER;
+	y = (map_LSR.rows - 1 - n->i) * PIXEL_TO_METER;
+}
+void transform_world_to_node(double& x, double& y, double& i, double& j)
+{
+	j = x / PIXEL_TO_METER;
+	i = map_LSR.rows - 1 - (int)round(y * PIXEL_TO_METER);
+}
 
 void initialize_graph()
 {
@@ -33,38 +52,8 @@ void initialize_graph()
 		graph[i].resize(map_LSR.cols);
 
 		for (int j = 0; j < map_LSR.cols; j++)
-			graph[i][j] = 0; // new NodeType(i, j);
+			graph[i][j] = 0;
 	}
-
-	//// Connect nodes of graph
-	//for (int i = 0; i < map_LSR.rows; i++)
-	//{
-	//	for (int j = 0; j < map_LSR.cols; j++)
-	//	{
-	//		NodeType* cur_node = graph[i][j];
-
-	//		if (j < map_LSR.cols - 1)
-	//		{
-	//			graph[i][j + 1]->incoming.push_back(cur_node);
-	//			cur_node->outgoing.push_back(graph[i][j + 1]);
-	//		}
-	//		if (i != 0)
-	//		{
-	//			graph[i - 1][j]->incoming.push_back(cur_node);
-	//			cur_node->outgoing.push_back(graph[i - 1][j]);
-	//		}
-	//		if (j != 0)
-	//		{
-	//			graph[i][j - 1]->incoming.push_back(cur_node);
-	//			cur_node->outgoing.push_back(graph[i][j - 1]);
-	//		}
-	//		if (i < map_LSR.rows - 1)
-	//		{
-	//			graph[i + 1][j]->incoming.push_back(cur_node);
-	//			cur_node->outgoing.push_back(graph[i + 1][j]);
-	//		}
-	//	}
-	//}
 }
 
 void convert_map_to_graph()
@@ -83,10 +72,13 @@ void convert_map_to_graph()
 		{
 			unsigned char pixel = image_grey.at<unsigned char>(i, j);
 
+			// Pixel is white => walkable
 			if (pixel > 250)
 			{
+				// When already existing, delete node first
 				if (graph[i][j]) delete graph[i][j];
 
+				// Then create new node at the current position
 				graph[i][j] = new NodeType(i, j);
 				graph[i][j]->pixel = pixel;
 				graph[i][j]->walkable = true;
@@ -101,8 +93,11 @@ void convert_map_to_graph()
 		{
 			unsigned char pixel = image_grey.at<unsigned char>(i, j);
 
+			// Pixel is white => walkable
 			if (pixel > 250)
 			{
+				// if Neighbour is existing -> set incoming and outgoing nodes
+				// else Create unwalkable neighbour and set up connections => the whole graph is surrounded by unwalkable nodes => walls can be dectected
 				if (graph[i][j + 1]) { graph[i][j + 1]->incoming.push_back(graph[i][j]); graph[i][j]->outgoing.push_back(graph[i][j + 1]); }
 				else
 				{
@@ -133,15 +128,18 @@ void convert_map_to_graph()
 			}
 		}
 	}
-
 }
 
 void clean_graph()
 {
 	std::cout << "- cleaning -" << std::endl;
 
+	if (!graph.size()) return;
+
 	for (int i = 0; i < map_LSR.rows; i++)
 	{
+		if (!graph[i].size()) continue;
+
 		for (int j = 0; j < map_LSR.cols; j++)
 		{
 			if (graph[i][j])
@@ -155,7 +153,7 @@ void clean_graph()
 
 void clear_visited()
 {
-	std::cout << "- clearing visited-" << std::endl;
+	std::cout << "- clearing visited -" << std::endl;
 
 	for (int i = 0; i < map_LSR.rows; i++)
 	{
@@ -174,16 +172,107 @@ bool plot_path(std::vector< NodeType*>* nodes)
 
 	for (auto it = nodes->begin(); it != nodes->end(); it++)
 	{
-		image.at<cv::Vec3b>((*it)->x, (*it)->y) = cv::Vec3b(255, 0, 0);
+		image.at<cv::Vec3b>((*it)->i, (*it)->j) = cv::Vec3b(255, 0, 0);
 	}
 
 	cv::namedWindow(WINDOW_NAME, CV_WINDOW_FREERATIO);
 	cv::imshow(WINDOW_NAME, image);
+	char result = cv::waitKey(0);
+	if (result == 'q') return true;
+	else return false;
+}
 
-	int result = cv::waitKey(0);
-	if (result == (int)'q') return true;
+NodePosition get_node_position(NodeType* n)
+{
+	//throw std::string("Values are still wrong");
 
-	return false;
+	// x <-> i
+	// y <-> j
+
+	if (n->i > 265 && n->i < 466)
+	{
+		if (n->j < 242) return NodePosition::LEFT;
+		if (n->j > 441) return NodePosition::RIGHT;
+	}
+
+	if (n->j > 242 && n->j < 441)
+	{
+		if (n->i < 265) return NodePosition::TOP;
+		if (n->i > 466) return NodePosition::BOTTOM;
+	}
+
+	return NodePosition::EDGE;
+}
+
+void write_path_to_file(std::vector<NodeType*>* nodes)
+{
+	std::cout << "- writing to file -" << std::endl;
+
+	if (nodes->size() <= 1) { std::cout << "At least two nodes are needed for a path!" << std::endl; return; }
+
+	std::ofstream ofs;
+	ofs.open("waypoints.txt", std::ios::out);
+	if (!ofs.is_open()) { std::cout << "Output file stream not open" << std::endl; return; }
+
+	double length = 0.0; // In meter
+	const double length_threshold = 3.0; // In meter, corridors are roughly 10 meter long
+	double x1, x2, y1, y2;
+
+	double x, y;
+
+	for (unsigned int i = 1; i < nodes->size(); i++)
+	{
+		transform_node_to_world(nodes->at(i), x1, y1);
+		transform_node_to_world(nodes->at(i-1), x2, y2);
+
+		//deltaX = (nodes->at(i)->i - nodes->at(i - 1)->i) * PIXEL_TO_METER;
+		//deltaY = (nodes->at(i)->j - nodes->at(i - 1)->j) * PIXEL_TO_METER;
+		length += sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2));
+
+		if (length > length_threshold)
+		{
+			length = 0.0;
+
+			/*
+			^ y							+----> j
+			|	RVIZ			vs	|	opencv
+			+----> x				v i
+			*/
+
+			transform_node_to_world(nodes->at(i), x, y);
+
+			//x = nodes->at(i)->j * PIXEL_TO_METER;
+			//y = (map_LSR.rows - 1 - nodes->at(i)->i) * PIXEL_TO_METER;
+
+			switch (get_node_position(nodes->at(i)))
+			{
+			case TOP:
+				ofs << x << " " << y << " " << 0.18 << std::endl;
+				if (CLOCKWISE)  ofs << 0.0 << " " << 0.0 << " " << -0.011 << " " << 1.0 << std::endl;
+				else ofs << 0.0 << " " << 0.0 << " " << 1.0 << " " << -0.002 << std::endl;
+				break;
+			case LEFT:
+				ofs << x << " " << y << " " << 0.18 << std::endl;
+				if (CLOCKWISE)  ofs << 0.0 << " " << 0.0 << " " << 0.682 << " " << 0.731 << std::endl;
+				else ofs << 0.0 << " " << 0.0 << " " << -0.725 << " " << 0.689 << std::endl;
+				break;
+			case BOTTOM:
+				ofs << x << " " << y << " " << 0.18 << std::endl;
+				if (CLOCKWISE)  ofs << 0.0 << " " << 0.0 << " " << 1.0 << " " << 0.007 << std::endl;
+				else ofs << 0.0 << " " << 0.0 << " " << -0.27 << " " << 1.0 << std::endl;
+				break;
+			case RIGHT:
+				ofs << x << " " << y << " " << 0.18 << std::endl;
+				if (CLOCKWISE)  ofs << 0.0 << " " << 0.0 << " " << -0.7 << " " << 0.715 << std::endl;
+				else ofs << 0.0 << " " << 0.0 << " " << 0.689 << " " << 0.725 << std::endl;
+				break;
+			case EDGE:
+				break;
+			default:
+				break;
+			}
+		}
+	}
 }
 
 void debug_draw()
@@ -215,6 +304,122 @@ void debug_draw()
 	int result = cv::waitKey(0);
 
 }
+void debug_path_to_file(std::vector<NodeType*>* nodes)
+{
+	std::cout << "- debug path to file -" << std::endl;
+
+
+	std::ofstream ofs;
+	ofs.open("path.txt", std::ios::out);
+	if (!ofs.is_open()) { std::cout << "Output file stream not open" << std::endl; return; }
+	for (unsigned int i = 0; i < nodes->size(); i++)
+	{
+		ofs << nodes->at(i)->i << " " << nodes->at(i)->j << std::endl;
+	}
+
+	return;
+}
+void debug_path_from_file(std::vector<NodeType*>* nodes)
+{
+	std::cout << "- debug path from file -" << std::endl;
+
+	std::ifstream ifs;
+	ifs.open("path.txt", std::ios::in);
+	if (!ifs.is_open()) { std::cout << "Output file stream not open" << std::endl; return; }
+
+	NodeType* n;
+	int x, y;
+
+	while (!ifs.eof())
+	{
+		ifs >> x >> y;
+
+		n = new NodeType(x, y);
+		nodes->push_back(n);
+	}
+
+	return;
+}
+void debug_compare_waypoints()
+{
+	struct Waypoint	{ double i, j; };
+	Waypoint w;
+	double x, y, tmp;
+
+	std::vector<Waypoint> points;
+	std::vector<Waypoint> points_ref;
+
+	std::ifstream ifs1, ifs2;
+
+	ifs1.open("waypoints.txt", std::ios::in);
+	if (!ifs1.is_open()) { std::cout << "Output file stream not open" << std::endl; return; }
+
+
+	std::string line;
+
+	while (std::getline(ifs1, line))
+	{
+		if (line == "") continue; //Skip empty lines
+
+		stringstream ss(line);
+		ss >> x >> y >> tmp; // Position line
+		
+		transform_world_to_node(x, y, w.i, w.j);
+
+		points.push_back(w);
+
+		std::getline(ifs1, line); //Quternion line
+	}
+	ifs1.close();
+
+	ifs2.open("WaypointsReference.txt", std::ios::in);
+	if (!ifs2.is_open()) { std::cout << "Output file stream not open" << std::endl; return; }
+
+	while (std::getline(ifs2, line))
+	{
+		if (line == "") continue; //Skip empty lines
+
+		stringstream ss(line);
+		ss >> x >> y >> tmp; // Position line
+
+		transform_world_to_node(x, y, w.i, w.j);
+		
+		points_ref.push_back(w);
+
+		std::getline(ifs2, line); //Quternion line
+	}
+	ifs2.close();
+
+	cv::Mat image = map_LSR.clone();
+
+	int radius = 3;
+	int posI, posJ;
+
+	for (unsigned int i = 0; i < points.size() && i < 1; i++)
+	{
+		posI = (int)round(points[i].i);
+		posJ = (int)round(points[i].j);
+
+		for (int a = -radius; a < radius; a++)
+			for (int b = -radius; b < radius; b++)
+				image.at<cv::Vec3b>(posI + a, posJ + b) = cv::Vec3b(0, 0, 255);
+	}
+
+	for (unsigned int i = 0; i < points_ref.size(); i++)
+	{
+		posI = (int)round(points_ref[i].i);
+		posJ = (int)round(points_ref[i].j);
+
+		for (int a = -radius; a < radius; a++)
+			for (int b = -radius; b < radius; b++)
+				image.at<cv::Vec3b>(posI + a, posJ + b) = cv::Vec3b(0, 0, 255);
+	}
+
+	cv::namedWindow(WINDOW_NAME, CV_WINDOW_FREERATIO);
+	cv::imshow(WINDOW_NAME, image);
+
+	int result = cv::waitKey(0);
+}
 
 int main(int __argc, char* __argv[])
 {
@@ -226,46 +431,52 @@ int main(int __argc, char* __argv[])
 		return -1;
 	}
 
+	if (0)
+	{
+		debug_compare_waypoints();
+		return 1;
+	}
+
 	PathFinder pf;
 
-	pf.create_costmap(&map_LSR);
-	
-	//return 1;
+	// The nodes which lead to the goal, filled by the pathfinder
+	std::vector<NodeType*> nodes;
 
-	initialize_graph();
+	if (0)
+	{
+		pf.create_costmap(&map_LSR);
 
-	convert_map_to_graph();
+		initialize_graph();
 
-	//NodeType* start_node = graph[221][235];
-	//NodeType* goal_node = graph[475][255];
+		convert_map_to_graph();
 
-	NodeType* corner_tl = graph[235][220];
-	NodeType* corner_tl2 = graph[236][220]; // Two neighboured pixels -> no closed loop easier to plot
-	NodeType* corner_tr = graph[250][475];
-	NodeType* corner_br = graph[500][460];
-	NodeType* corner_bl = graph[490][205];
+		NodeType* corner_tl = graph[235][220]; // Top left
+		NodeType* corner_tr = graph[250][475]; // Top right
+		NodeType* corner_br = graph[500][460]; // Bottom right
+		NodeType* corner_bl = graph[490][205]; // Bottom left
 
-	std::vector<NodeType*> nodes; // The nodes which lead to the goal
+		pf.Search(corner_tl, corner_tr, &nodes); clear_visited();
+		pf.Search(corner_tr, corner_br, &nodes); clear_visited();
+		pf.Search(corner_br, corner_bl, &nodes); clear_visited();
+		pf.Search(corner_bl, corner_tl, &nodes); clear_visited();
 
-	//path[corner_tl] = graph[0][0]; //Set start node parent to the origin
+		std::cout << "Path found with length " << nodes.size() << std::endl;
 
-	pf.Search(corner_tl, corner_tr, &nodes); clear_visited();
-	pf.Search(corner_tr, corner_br, &nodes); clear_visited();
-	pf.Search(corner_br, corner_bl, &nodes); clear_visited();
-	pf.Search(corner_bl, corner_tl, &nodes); clear_visited();
 
-	std::cout << "Path Found with length " << nodes.size() << std::endl;
+		debug_path_to_file(&nodes);
 
-	plot_path(&nodes);
+		clean_graph();
+		return 1;
+	}
 
-	clean_graph();
 
-	//cv::Mat image = cv::Mat::zeros(sizeY, sizeX, CV_8UC3);
-	//cv::namedWindow(WINDOW_NAME, CV_WINDOW_FREERATIO);
-	//cv::imshow(WINDOW_NAME, image);
-
-	//int result = cv::waitKey(0);
-	//if (result == (int)'q') return true;
+	if (1)
+	{
+		debug_path_from_file(&nodes);
+		plot_path(&nodes);
+		write_path_to_file(&nodes);
+		clean_graph();
+	}
 
 	return 1;
 }
