@@ -19,6 +19,15 @@ control::control()
 //    previous_ServoMsg.y = 1500;
 
 }
+
+control::~control()
+{
+    control_servo.x = 1500;
+    control_servo.y = 1500;
+    control_servo_pub_.publish(control_servo);
+}
+
+
 // We can subscribe to the odom here and get some feedback signals so later we can build our controllers
 void control::odomCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
@@ -63,6 +72,12 @@ void control::wiiCommunicationCallback(const std_msgs::Int16MultiArray::ConstPtr
 {
     control_Mode.data = msg->data[0];
     control_Brake.data = msg->data[1];
+
+//    for (int var = 0; var < msg->data.size(); ++var)
+//    {
+//        ROS_INFO("Wii Data %d: %d\n", var,  msg->data [var]);
+//    }
+
 }
 
 //geometry_msgs::Vector3 control::P_Controller()

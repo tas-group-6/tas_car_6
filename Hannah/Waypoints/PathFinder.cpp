@@ -13,20 +13,30 @@ void PathFinder::create_costmap(const cv::Mat* image)
 {
 	cv::Mat image_grey;
 	cv::Mat image_thres;
+	cv::Mat test, test2;
+
 	cv::cvtColor(*image, image_grey, CV_RGB2GRAY);
 
 	cv::threshold(image_grey, image_thres, 250, 255, CV_THRESH_BINARY);
 
-	//cv::blur(image_thres, m_costmap, cv::Size(15, 15));
+	//cv::namedWindow("test", CV_WINDOW_FREERATIO);
+	//cv::imshow("test", image_thres);
+	//cv::waitKey(0);
+	
 	cv::blur(image_thres, m_costmap, cv::Size(25, 25));
-
+	
 	m_costmap = ~m_costmap; // negate -> white == high costs
 	
-	/*cv::namedWindow("test", CV_WINDOW_FREERATIO);
-	cv::imshow("test", m_costmap);
-		
-	int result = cv::waitKey(0);*/
-	
+	//cv::threshold(test, m_costmap, 25, 255, CV_THRESH_BINARY);
+
+	//cv::blur(test2, m_costmap, cv::Size(25, 25));
+
+	//cv::imwrite("blur.png", m_costmap);
+
+
+	//cv::namedWindow("test", CV_WINDOW_FREERATIO);
+	//cv::imshow("test", m_costmap);
+	//cv::waitKey(0);	
 }
 
 void PathFinder::Search(NodeType* start, NodeType* goal, std::vector<NodeType*>* nodes)
@@ -54,6 +64,16 @@ void PathFinder::Search(NodeType* start, NodeType* goal, std::vector<NodeType*>*
 
 bool PathFinder::goal_test(NodeType* n)
 {
+	//bool result;
+
+	//static int counter = 0;
+
+	//if (counter < 100) return false;
+
+
+	
+
+
 	return n == m_goal;
 
 	//static int counter = 0;
@@ -113,7 +133,7 @@ int PathFinder::heuristic(NodeType* n)
 	int a = (int)round(sqrt((n->i - m_goal->i)*(n->i - m_goal->i) + (n->j - m_goal->j)*(n->j - m_goal->j)));
 
 	// Costmap value
-	int b = (int)round( 250.0 * (double)m_costmap.at<unsigned char>(n->i, n->j) / 255.0);
+	int b = (int)round( 1000.0 * (double)m_costmap.at<unsigned char>(n->i, n->j) / 255.0);
 
 	return a + b;
 }
@@ -135,7 +155,7 @@ int PathFinder::cost_of_action(NodeType* current, NodeType* successor)
 	}
 
 	if (current->walkable && !successor->walkable)
-		return 1000; // Fee for moving into unwalkable parts of the map
+		return 100000; // Fee for moving into unwalkable parts of the map
 
 	return 0;
 }
