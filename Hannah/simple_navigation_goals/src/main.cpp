@@ -44,6 +44,8 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "simple_navigation_goals"); // init and set name
     std::vector<geometry_msgs::Pose> waypoints; // vector of goals, with position and orientation
 
+
+// Load waypoints from text file
     ifstream ifs;
     ifs.open("/home/tas_group_06/Documents/Waypoints.txt");
     if(!ifs.is_open()) return -1;
@@ -87,9 +89,13 @@ int main(int argc, char** argv)
 
     ros::Rate goal_rate(1);
 
+
+//Send goals in a loop
     while (ros::ok())
     {
-        for(int i = 0; i < waypoints.size(); ++i) { // loop over all goal points, point by point
+			 // loop over all goal points, point by point
+        for(int i = 0; i < waypoints.size(); ++i)
+			 {
             goal.target_pose.header.stamp = ros::Time::now(); // set current time
             goal.target_pose.pose = waypoints.at(i);
             ROS_INFO("Sending goal");
@@ -100,7 +106,7 @@ int main(int argc, char** argv)
                 ROS_INFO("The base moved to %d goal", i);
             } else {
                 ROS_INFO("The base failed to move to %d goal for some reason", i);
-            }
+        }
 
             goal_rate.sleep();
     }
