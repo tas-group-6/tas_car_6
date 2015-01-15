@@ -1,0 +1,24 @@
+# We raised the values of obstacle_range and raytrace_range range. As a consequence
+# the costmap is updated (marking and clearing) for longer distances. This improves
+# the collision avoidance of the car. 
+
+obstacle_range: 3.0 #1.05
+raytrace_range: 4.5 #2.5
+
+
+# We furthermore changed the footprint. We included the fact that the car is not a 
+# rectangle and that the wheels can veer. Since the performance of the car worsend 
+# with the new parameter, even though it is closer to the real footprint of the car,
+# we used the old values again. 
+
+footprint: [[0.33, 0.22], [0.33, -0.22], [-0.33, -0.22], [-0.33, 0.22]]
+#footprint: [[0.31, 0.25], [0.33, 0], [0.31, -0.25], [-0.31, -0.22], [-0.33, 0], [-0.31, 0.22]]
+
+
+# Moreover we tried different values of the inflation_radius, but only got worse performance 
+# as a response. So we sticked to the 1.5.
+
+inflation_radius: 1.5
+
+observation_sources: laser_scan_sensor
+laser_scan_sensor: {sensor_frame: laser, data_type: LaserScan, topic: scan, marking: true, clearing: true}
