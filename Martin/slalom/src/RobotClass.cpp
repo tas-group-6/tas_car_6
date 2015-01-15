@@ -14,9 +14,9 @@ RobotClass::RobotClass() : m_index_initial(0), m_index_left(0), m_index_right(0)
     std::string filename2;
     std::string filename3;
 
-    std::string path = "/home/tas_group_06/catkin_ws/src/slalom/log_files/" ;
-    //std::string path = "/home/martin/TAS_ws/tas_car_6/trunk/Martin/slalom/log_files/";
-    //std::string path = "/home/martin/Programming/TAS/tas_car_6/trunk/Martin/slalom/log_files/";
+    std::string path = "/home/tas_group_06/catkin_ws/src/slalom/log_files/" ;                       // Car
+    //std::string path = "/home/martin/TAS_ws/tas_car_6/trunk/Martin/slalom/log_files/";            // Notebook
+    //std::string path = "/home/martin/Programming/TAS/tas_car_6/trunk/Martin/slalom/log_files/";   // Home PC
 
     std::stringstream ss1; ss1 << path << "init_turn_left.txt";
     filename1 = ss1.str();
@@ -32,10 +32,8 @@ RobotClass::RobotClass() : m_index_initial(0), m_index_left(0), m_index_right(0)
     result = loadInstructionVector(m_initial_turn, filename1);
     if(!result) throw ErrorType("Could not load initial turn");
 
-
     result =  loadInstructionVector(m_turn_left, filename2);
     if(!result) throw ErrorType("Could not load left turn");
-
 
     result =  loadInstructionVector(m_turn_right, filename3);
     if(!result) throw ErrorType("Could not load right turn");
