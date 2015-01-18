@@ -27,28 +27,24 @@ struct NodeType
 		pixel(0), visited(false), walkable(false),
 		cost_accumulator(0)
 	{}
-	~NodeType()
-	{
-		//outgoing.clear();
-		//incoming.clear();
-	}
 };
 
+// Renaming to prevent typos
 typedef std::map < NodeType*, NodeType*> PathType;
 
-
-
-//enum ActionType{ North, West, South, East };
-//const ActionType actions[] = { North, West, South, East };
-
+/*
+Impletents the A* search algorithm to search a given graph for the optimal path.
+*/
 class PathFinder
 {
 public:
 	PathFinder();
 	~PathFinder();
 
+	/*The map is processed with OpenCV to create a costmap.*/
 	void create_costmap(const cv::Mat* imag);
 
+	/*Searche the graph starting at 'start'. Finished when a optimal path to 'goal' is found. The path is appended at the end of 'nodes'*/
 	void Search(NodeType* start, NodeType* goal, std::vector<NodeType*>* nodes);
 
 private:
@@ -56,6 +52,7 @@ private:
 	// Takes the current node and its valid successor and calculates the cost for the action
 	int cost_of_action(NodeType* current, NodeType* successor);
 
+	// Converts the path map to a list of nodes
 	void path_to_nodes(PathType* path, std::vector<NodeType*>* nodes);
 
 	// Test if the given node is a goal state. The first goal is the top right corner in the map. When it is reached

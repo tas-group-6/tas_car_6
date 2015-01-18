@@ -22,15 +22,15 @@
 
 using namespace std;
 
+/*
+* Custom Priority queue without heap so that elements in the queue can be changed.
+* Not suitable for very large queues.
+*/
 template< typename T > class PriorityQueue
 {
 public:
-	PriorityQueue()
-	{
-	}
-	~PriorityQueue()
-	{
-	}
+	PriorityQueue()	{	}
+	~PriorityQueue()	{	}
 
 	// Pushes a new element with the given position on the queue
 	// When the element is already contained the position is changed 
@@ -90,7 +90,8 @@ public:
 		return it != m_elements.end();
 	}
 
-	// Searches the element in the container. Returns true if the element is found and if it has a higher position
+	// Searches the element in the container. 
+	// Returns true if the element is found and if it has a higher position
 	bool find(T to_find, int pos)
 	{
 		for (auto it = m_elements.begin(); it != m_elements.end(); it++)
@@ -109,12 +110,11 @@ public:
 
 
 private:
+	// A element of the queue. Datatype T with integer position
 	struct element
 	{
 		T value;
 		int position;
-
-
 	};
 
 	vector<element> m_elements;

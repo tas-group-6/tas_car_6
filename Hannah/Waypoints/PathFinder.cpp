@@ -1,12 +1,7 @@
 #include "PathFinder.h"
 
-PathFinder::PathFinder()
-{
-}
-
-PathFinder::~PathFinder()
-{
-}
+PathFinder::PathFinder(){}
+PathFinder::~PathFinder(){}
 
 
 void PathFinder::create_costmap(const cv::Mat* image)
@@ -37,6 +32,9 @@ void PathFinder::create_costmap(const cv::Mat* image)
 	//cv::namedWindow("test", CV_WINDOW_FREERATIO);
 	//cv::imshow("test", m_costmap);
 	//cv::waitKey(0);	
+
+	cv::imwrite("CostMap.png", m_costmap);
+
 }
 
 void PathFinder::Search(NodeType* start, NodeType* goal, std::vector<NodeType*>* nodes)
