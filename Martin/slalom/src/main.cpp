@@ -18,10 +18,10 @@ const double update_rate = 50.0;
 
 
 
-void chatterCallback(const std_msgs::String::ConstPtr& msg)
-{
-    std::printf("I heard: [%s]", msg->data.c_str());
-}
+//void chatterCallback(const std_msgs::String::ConstPtr& msg)
+//{
+//    std::printf("I heard: [%s]", msg->data.c_str());
+//}
 
 int main(int argc, char **argv)
 {

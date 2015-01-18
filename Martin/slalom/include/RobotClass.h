@@ -33,6 +33,7 @@ public:
   RobotClass();
   ~RobotClass();
 
+
   bool update(ServoInstructionType& instruction);
 
   bool FillScanMessage(sensor_msgs::LaserScan& scan) const;

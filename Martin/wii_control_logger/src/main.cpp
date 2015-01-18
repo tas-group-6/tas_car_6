@@ -19,7 +19,8 @@ int main(int argc, char* argv[])
 
     std::cout << "Ready for recording. Press Button A" << std::endl;
 
-    ros::Rate loop_rate(100.0);
+    //TODO: is this rate correct
+    ros::Rate loop_rate(50.0);
 
 //    static int count = 0;
 
