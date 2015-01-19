@@ -201,24 +201,24 @@ void PathFinder::aStarSearch(PathType* path)
 
 			cost = cost_of_action(current, sucessor);
 
-			//        = costs to get to this point + cost for the action + heuristic value for the successor
-			tmp_costs = current->cost_accumulator + cost + heuristic(sucessor);
+			//        = costs to get to this point + cost for the action 
+			tmp_costs = current->cost_accumulator + cost; 
 
 			// a node which has not been visited and is not in the queue can be added without danger
 			if (!sucessor->visited && !pq.find(sucessor))
 			{
 				path->operator[](sucessor) = current;
 				sucessor->cost_accumulator = tmp_costs;
-				pq.push(sucessor, tmp_costs);
+				pq.push(sucessor, tmp_costs + heuristic(sucessor));
 
 			}
 			// otherwise test if node is in queue with higher cost. If true,
 			// the longer path can be replaced with the current one
-			else if (pq.find(sucessor, tmp_costs))
+			else if (pq.find(sucessor, tmp_costs + heuristic(sucessor)))
 			{
 				path->operator[](sucessor) = current;
 				sucessor->cost_accumulator = tmp_costs;
-				pq.push(sucessor, tmp_costs);
+				pq.push(sucessor, tmp_costs + heuristic(sucessor));
 			}
 		}
 	}
